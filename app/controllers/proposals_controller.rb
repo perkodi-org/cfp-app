@@ -95,6 +95,7 @@ class ProposalsController < ApplicationController
     if @proposal.save
       current_user.update_bio
       flash[:confirm] = setup_flash_message
+      send_notification_to_telegram_channel
       redirect_to event_proposal_url(event_slug: @event.slug, uuid: @proposal)
     else
       flash[:danger] = "There was a problem saving your proposal."
@@ -139,6 +140,24 @@ class ProposalsController < ApplicationController
   end
 
   private
+
+  def send_notification_to_telegram_channel
+    if notify_via_telegram?
+      Net::HTTP.post_form URI(telegram_bot_url), chat_id: telegram_channel_id, text: %(Hai, ada <a href="#{reviewer_event_proposal_url @event, @proposal}">proposal baru untuk #{@event.name}</a>!)
+    end
+  end
+
+  def telegram_bot_url
+    ENV["TELEGRAM_BOT_URL"]
+  end
+
+  def telegram_channel_id
+    ENV["TELEGRAM_CHANNEL_ID"]
+  end
+
+  def notify_via_telegram?
+    [telegram_bot_url, telegram_channel_id].map(&:present?).all?
+  end
 
   def proposal_params
     params.require(:proposal).permit(:title, {tags: []}, :session_format_id, :track_id, :abstract, :details, :pitch, custom_fields: @event.custom_fields,
