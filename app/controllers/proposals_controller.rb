@@ -143,7 +143,10 @@ class ProposalsController < ApplicationController
 
   def send_notification_to_telegram_channel
     if notify_via_telegram?
-      Net::HTTP.post_form URI("#{telegram_bot_url}/sendMessage"), chat_id: telegram_channel_id, text: %(Hai, ada <a href="#{event_staff_proposal_url(@proposal.event, @proposal)}">proposal baru untuk #{@event.name}</a>!)
+      Net::HTTP.post_form URI("#{telegram_bot_url}/sendMessage"),
+                          chat_id: telegram_channel_id,
+                          parse_mode: "Markdown",
+                          text: %(Hai, ada [proposal baru untuk #{@event.name}](#{event_staff_proposal_url(@proposal.event, @proposal)})!)
     end
   end
 
